@@ -77,7 +77,25 @@ ${supportedVersions.join(' - ')}
     if (process.env.TRONBOX_NAME) {
       name = process.env.TRONBOX_NAME
     }
-    const output = execSync(`${name} --download-compiler ${compilerVersion}`).toString()
+
+    const originPlatform = process.platform
+    let output = ''
+    if (originPlatform === 'win32') {
+      if (process.env.SHELL.indexOf('bash') === -1) {
+        console.error('TronBox only support MINGW in Windows System')
+        // eslint-disable-next-line no-process-exit
+        process.exit(1)
+      }
+      delete process.platform
+      process.platform = 'linux'
+      output = execSync(`${name} --download-compiler ${compilerVersion}`, {
+        shell: process.env.SHELL,
+      }).toString()
+      process.platform = originPlatform
+    } else {
+      output = execSync(`${name} --download-compiler ${compilerVersion}`).toString()
+    }
+
     if (output.indexOf('Permission required') !== -1) {
       console.error(`
 Error: Permissions required.
